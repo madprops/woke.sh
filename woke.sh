@@ -36,6 +36,11 @@ do
     
     if [ "$diff" -gt "$gap" ];
     then
+        if [ "$used_date" -eq "$current_date" ];
+        then
+            used_date=$((sorted_dates[i]))
+        fi
+
         sdate=$(date --date @${used_date} +"%r")
         diff2=$((current_date - used_date))
         hours_ago=$(echo "scale=2; ${diff2}/3600" | bc)
