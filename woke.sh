@@ -13,7 +13,7 @@ while [ ! $# -eq 0 ]
 do
     case "$1" in
         --help | -h)
-            printf "Take a deep breath...\nVersion: 1.1.1\nFlags:\n\t-g or --gap: Specifies the chunks of time between two dates to determine when you probably woke up (default is 5)\n"
+            printf "Version: 1.2.1\nFlags:\n\t-g or --gap: Specifies the chunks of time between two dates to determine when you probably woke up (default is 5)\n"
             exit
             ;;
         --gap | -g)
@@ -29,6 +29,7 @@ readarray -t boot_dates < <(journalctl --list-boots | tail -50 | awk '{ d2ts="da
 dates=( "${sleep_dates[@]}" "${boot_dates[@]}" )
 readarray -t sorted_dates < <(printf '%s\n' "${dates[@]}" | sort)
 used_date=$((current_date))
+valid=true
 
 for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); 
 do
@@ -36,36 +37,41 @@ do
     
     if [ "$diff" -gt "$gap" ];
     then
-        if [ "$used_date" -eq "$current_date" ];
-        then
-            used_date=$((sorted_dates[i]))
-        fi
+        if [ "$valid" = true ]; then
+            if [ "$used_date" -eq "$current_date" ];
+            then
+                used_date=$((sorted_dates[i]))
+            fi
 
-        sdate=$(date --date @${used_date} +"%r")
-        diff2=$((current_date - used_date))
-        hours_ago=$(echo "scale=2; ${diff2}/3600" | bc)
-        whole_hours=$(echo "(${hours_ago})/1" | bc)
-        decimals=$(echo "${hours_ago}" | grep -Eo "\.[0-9]+$")
-        minutes_ago=$(echo "(${decimals}*60)/1" | bc)
+            sdate=$(date --date @${used_date} +"%r")
+            diff2=$((current_date - used_date))
+            hours_ago=$(echo "scale=2; ${diff2}/3600" | bc)
+            whole_hours=$(echo "(${hours_ago})/1" | bc)
+            decimals=$(echo "${hours_ago}" | grep -Eo "\.[0-9]+$")
+            minutes_ago=$(echo "(${decimals}*60)/1" | bc)
 
-        if [ "$whole_hours" -eq "1" ];
-        then
-            shours="hour"
+            if [ "$whole_hours" -eq "1" ];
+            then
+                shours="hour"
+            else
+                shours="hours"
+            fi
+
+            if [ "$minutes_ago" -eq "1" ];
+            then
+                sminutes="minute"
+            else
+                sminutes="minutes"
+            fi
+
+            message="${whole_hours} ${shours} and ${minutes_ago} ${sminutes} ago ( ${sdate} )"
+            echo "$message"
+            break
         else
-            shours="hours"
-        fi
-
-        if [ "$minutes_ago" -eq "1" ];
-        then
-            sminutes="minute"
-        else
-            sminutes="minutes"
-        fi
-
-        message="${whole_hours} ${shours} and ${minutes_ago} ${sminutes} ago ( ${sdate} )"
-        echo "$message"
-        break
+            valid=true       
+        fi        
     else
+        valid=false
         used_date=$((sorted_dates[i]))
     fi
 done
