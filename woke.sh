@@ -29,7 +29,7 @@ readarray -t boot_dates < <(journalctl --list-boots | tail -50 | awk '{ d2ts="da
 dates=( "${sleep_dates[@]}" "${boot_dates[@]}" )
 readarray -t sorted_dates < <(printf '%s\n' "${dates[@]}" | sort)
 used_date=$((current_date))
-prev_used_date=$(( $current_date + $gap + 10 ))
+prev_used_date=0
 
 for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
     diff=$((used_date - sorted_dates[i]))
