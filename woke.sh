@@ -35,7 +35,7 @@ for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
     diff=$((used_date - sorted_dates[i]))
     diff2=$((prev_used_date - used_date))
     
-    if [ "$diff" -gt "$gap" ] && [ "$diff2" -gt "$gap" ]; then
+    if [ "$diff" -gt "$gap" ] && [ "$diff2" -lt "$gap" ]; then
         if [ "$used_date" -eq "$current_date" ];
         then
             used_date=$((sorted_dates[i]))
@@ -66,7 +66,7 @@ for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
         echo "$message"
         break     
     else
-        prev_used_date="$used_date"
+        prev_used_date=$((used_date))
         used_date=$((sorted_dates[i]))
     fi
 done
