@@ -33,7 +33,7 @@ for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
     diff=$((sorted_dates[i] - sorted_dates[i - 1]))
     diff2=$((sorted_dates[i - 1] - sorted_dates[i - 2]))
     
-    if [ "$diff" -gt "$gap" ] && [ "$diff2" -gt "$gap" ]; then
+    if [ "$diff" -gt "$gap" ] && [ "$diff2" -lt "$gap" ]; then
         sdate=$(date --date @${sorted_dates[i]} +"%r")
         diff2=$((current_date - sorted_dates[i]))
         hours_ago=$(echo "scale=2; ${diff2}/3600" | bc)
