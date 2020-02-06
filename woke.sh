@@ -28,21 +28,14 @@ readarray -t sleep_dates < <(journalctl -o short-unix -t systemd-sleep | grep -E
 readarray -t boot_dates < <(journalctl --list-boots | tail -50 | awk '{ d2ts="date -d \""$3" "$4" " $5"\" +%s"; d2ts | getline $(NF+1); close(d2ts)} 1' | awk 'NF>1{print $NF}')
 dates=( "${sleep_dates[@]}" "${boot_dates[@]}" )
 readarray -t sorted_dates < <(printf '%s\n' "${dates[@]}" | sort)
-used_date=$((current_date))
-prev_used_date=0
 
 for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
-    diff=$((used_date - sorted_dates[i]))
-    diff2=$((prev_used_date - used_date))
+    diff=$((sorted_dates[i] - sorted_dates[i - 1]))
+    diff2=$((sorted_dates[i - 1] - sorted_dates[i - 2]))
     
-    if [ "$diff" -gt "$gap" ] && [ "$diff2" -lt "$gap" ]; then
-        if [ "$used_date" -eq "$current_date" ];
-        then
-            used_date=$((sorted_dates[i]))
-        fi
-
-        sdate=$(date --date @${used_date} +"%r")
-        diff2=$((current_date - used_date))
+    if [ "$diff" -gt "$gap" ] && [ "$diff2" -gt "$gap" ]; then
+        sdate=$(date --date @${sorted_dates[i]} +"%r")
+        diff2=$((current_date - sorted_dates[i]))
         hours_ago=$(echo "scale=2; ${diff2}/3600" | bc)
         whole_hours=$(echo "(${hours_ago})/1" | bc)
         decimals=$(echo "${hours_ago}" | grep -Eo "\.[0-9]+$")
@@ -64,9 +57,6 @@ for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
 
         message="${whole_hours} ${shours} and ${minutes_ago} ${sminutes} ago ( ${sdate} )"
         echo "$message"
-        break     
-    else
-        prev_used_date=$((used_date))
-        used_date=$((sorted_dates[i]))
+        break
     fi
 done
