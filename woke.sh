@@ -7,7 +7,7 @@
 # It then loops through them and tries to find when the difference is above a certain gap (5 hours by default, it can be configured with the -g flag).
 # Then it prints the time and "timeago" information of when you probably woke up.
 
-gap=18000
+gap=$((8 * 3600))
 
 while [ ! $# -eq 0 ]
 do
@@ -28,21 +28,15 @@ readarray -t sleep_dates < <(journalctl -o short-unix -t systemd-sleep | grep re
 readarray -t boot_dates < <(journalctl --list-boots | tail -50 | awk '{ d2ts="date -d \""$3" "$4" " $5"\" +%s"; d2ts | getline $(NF+1); close(d2ts)} 1' | awk 'NF>1{print $NF}')
 dates=( "${sleep_dates[@]}" "${boot_dates[@]}" )
 readarray -t sorted_dates < <(printf '%s\n' "${dates[@]}" | sort)
-skip=true
 
 for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
-    if [ "$skip" = true ]; then
-        skip=false
-        continue
-    fi
-
     diff=$((sorted_dates[i] - sorted_dates[i - 1]))
     diff2=$((sorted_dates[i - 1] - sorted_dates[i - 2]))
     
-    if [ "$diff" -gt "$gap" ] && [ "$diff2" -gt "$gap" ]; then
+    if [ "$diff" -gt "$gap" ] && [ "$diff2" -lt "$gap" ]; then
         sdate=$(date --date @${sorted_dates[i]} +"%r")
-        diff2=$((current_date - sorted_dates[i]))
-        hours_ago=$(echo "scale=2; ${diff2}/3600" | bc)
+        diff3=$((current_date - sorted_dates[i]))
+        hours_ago=$(echo "scale=2; ${diff3}/3600" | bc)
         whole_hours=$(echo "(${hours_ago})/1" | bc)
         decimals=$(echo "${hours_ago}" | grep -Eo "\.[0-9]+$")
         minutes_ago=$(echo "(${decimals}*60)/1" | bc)
