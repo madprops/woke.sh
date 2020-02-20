@@ -27,11 +27,12 @@ current_date=$(date +%s)
 readarray -t sleep_dates < <(journalctl -o short-unix -t systemd-sleep | grep resumed | tail -50 | awk -F. '{print $1}')
 readarray -t boot_dates < <(journalctl --list-boots | tail -50 | awk '{ d2ts="date -d \""$3" "$4" " $5"\" +%s"; d2ts | getline $(NF+1); close(d2ts)} 1' | awk 'NF>1{print $NF}')
 dates=( "${sleep_dates[@]}" "${boot_dates[@]}" )
+dates=("$current_date" "${dates[@]}" )
+unset dates[0]
 readarray -t sorted_dates < <(printf '%s\n' "${dates[@]}" | sort)
-sorted_dates=("$current_date" "${sorted_dates[@]}" )
-unset sorted_dates[0]
 
 for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
+    echo 111
     diff=$((sorted_dates[i] - sorted_dates[i - 1]))
     diff2=$((sorted_dates[i - 1] - sorted_dates[i - 2]))
     
