@@ -32,7 +32,6 @@ unset dates[0]
 readarray -t sorted_dates < <(printf '%s\n' "${dates[@]}" | sort)
 
 for (( i=${#sorted_dates[@]}-1 ; i>=0; i-- )); do
-    echo 111
     diff=$((sorted_dates[i] - sorted_dates[i - 1]))
     diff2=$((sorted_dates[i - 1] - sorted_dates[i - 2]))
     
